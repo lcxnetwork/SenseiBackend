@@ -1,0 +1,26 @@
+{
+  "name": "senseinodebackend",
+  "version": "0.0.1",
+  "description": "backend for sensei node system",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/lcxnetwork/SenseiNodeBackend.git"
+  },
+  "author": "ExtraHash & LightChain Developers",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/lcxnetwork/SenseiNodeBackend/issues"
+  },
+  "homepage": "https://github.com/lcxnetwork/SenseiNodeBackend#readme",
+  "dependencies": {
+    "dotenv": "^7.0.0",
+    "knex": "^0.16.5",
+    "mysql": "^2.17.1",
+    "request-promise": "^4.2.4",
+    "turtlecoin-rpc": "^0.12.4"
+  }
+}
