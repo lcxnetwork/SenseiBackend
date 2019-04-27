@@ -1,4 +1,9 @@
+// Copyright (c) 2019 ExtraHash, The LightChain Developers
+//
+// Please see included LICENSE file for more information.
+
 'use strict';
+
 const knex = (module.exports = require('knex')({
   client: 'mysql',
   connection: {
