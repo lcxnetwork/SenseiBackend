@@ -10,9 +10,9 @@ main();
 
 function main() {
     nodeCheck();
-    setInterval(nodeCheck, 10000);
+    setInterval(nodeCheck, 600000);
     checkShares();
-    setInterval(checkShares, 10000);
+    setInterval(checkShares, 600000);
 }
 
 async function nodeCheck() {
