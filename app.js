@@ -49,7 +49,7 @@ async function checkShares() {
     const pingList = [];
     const users = await db('users')
     .select('*')
-    .from('users');
+    .from('users')
     let lookupArray = users.map(item => `${item.id}`);
     lookupArray.forEach(function(element) {
         getPingList(element, pingList, users);
@@ -57,10 +57,12 @@ async function checkShares() {
 }
 
 async function getPingList(userID, pingList, users) {
+    // SELECT * FROM pings WHERE timestamp >= current_timestamp() - INTERVAL 1 DAY;
     const pingRequest = await db('pings')
     .select('*')
     .from('pings')
-    .where({ id: userID })
+    .where({ id: userID}, 'timestamp', '>=', 'current_timestamp() - INTERVAL 1 DAY')
+    console.log(pingRequest);
     let insertData = { id: userID, shares: pingRequest.length }
     pingList.push(insertData);
     if (pingList.length === users.length) {
