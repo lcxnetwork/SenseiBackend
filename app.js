@@ -62,7 +62,6 @@ async function getPingList(userID, pingList, users) {
     .select('*')
     .from('pings')
     .where({ id: userID}, 'timestamp', '>=', 'current_timestamp() - INTERVAL 1 DAY')
-    console.log(pingRequest);
     let insertData = { id: userID, shares: pingRequest.length }
     pingList.push(insertData);
     if (pingList.length === users.length) {
