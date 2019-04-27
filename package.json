@@ -20,7 +20,7 @@
     "dotenv": "^7.0.0",
     "knex": "^0.16.5",
     "mysql": "^2.17.1",
-    "request-promise": "^4.2.4",
-    "turtlecoin-rpc": "^0.12.4"
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
   }
 }
