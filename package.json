@@ -4,7 +4,8 @@
   "description": "backend for sensei node system",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.js",
+    "payd": "node payd.js"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
     "knex": "^0.16.5",
     "mysql": "^2.17.1",
     "request": "^2.88.0",
-    "request-promise": "^4.2.4"
+    "request-promise": "^4.2.4",
+    "turtlecoin-wallet-backend": "git+https://git@github.com/turtlecoin/turtlecoin-wallet-backend-js.git"
   }
 }

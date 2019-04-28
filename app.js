@@ -50,7 +50,7 @@ async function checkShares() {
     const users = await db('users')
     .select('*')
     .from('users')
-    let lookupArray = users.map(item => `${item.id}`);
+    let lookupArray = users.map(item => item.id);
     lookupArray.forEach(function(element) {
         getPingList(element, pingList, users);
     });
