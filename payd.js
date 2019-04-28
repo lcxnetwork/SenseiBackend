@@ -23,7 +23,7 @@ async function main() {
 
     let lookupArray = userList.map(item => item.id);
     console.log(lookupArray);
-
+    
 }
 
 async function openWallet() {

@@ -24,7 +24,11 @@ async function nodeCheck() {
     let insertArray = nodesFromDB;
     const validateResults = await validateNodes(nodeArray);
     for (let i = validateResults.length - 1; i >= 0; i--) {
-        if (validateResults[i] === undefined || validateResults[i].amount !== 0) {
+        const validationKey = await db('users')
+        .select('validationkey')
+        .from('users')
+        .where({id: nodesFromDB[i].id})
+        if (validateResults[i] === undefined || validateResults[i].synced !== true || validateResults[i].validate !== validationKey[0].validationkey ) {
             nodeArray.splice(i, 1);
             insertArray.splice(i, 1);
         }
@@ -89,7 +93,7 @@ async function compareHash(nodeArray, checkHeight) {
 
 function validateNodes(nodeArray) {
     // take the array of nodes and create an array of promises
-    let requestArray = nodeArray.map(item => `http://${item}/fee`);
+    let requestArray = nodeArray.map(item => `http://${item}/info`);
     return Promise.all(requestArray.map(url => 
         asyncGetData(url) 
         .catch(error => console.log('** failed health check\n' + error))
