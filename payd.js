@@ -5,37 +5,104 @@
 require('dotenv').config()
 const WB = require('turtlecoin-wallet-backend');
 const db = require('./utils').knex;
+const readline = require('readline');
 
 main();
 
 async function main() {
-    openWallet().catch(err => {
-        console.log('Caught promise rejection: ' + err);
-    });
 
-    const userList = await db('users')
-    .select('*')
-    .from('users')
+    openWallet()
+        .catch(err => {
+            console.log('Caught promise rejection: ' + err);
+        })
 
-    const pingList = await db('pings')
-    .select('*')
-    .from('pings')
-
-    let lookupArray = userList.map(item => item.id);
-    console.log(lookupArray);
-    
 }
 
+
 async function openWallet() {
-    const daemon = new WB.BlockchainCacheApi('blockapi.aeonclassic.org', true);
-    const [wallet, error] = WB.WalletBackend.openWalletFromFile(daemon, 'senseitest.wallet', process.env.WALLET_PASSWORD);
+
+    // start wallet
+    const daemon = new WB.ConventionalDaemon('xmlc.ml', '10002');
+    const [wallet, error] = WB.WalletBackend.openWalletFromFile(daemon, process.env.WALLET_NAME, process.env.WALLET_PASSWORD);
     if (error) {
         console.log('Failed to open wallet: ' + error.toString());
     }
     console.log('Opened wallet');
     await wallet.start();
     console.log('Started wallet ' + wallet.getPrimaryAddress());
-    /* After some time...
-    wallet.stop();
-    */
+
+    // readling keypress handling
+    readline.emitKeypressEvents(process.stdin);
+    process.stdin.setRawMode(true);
+    process.stdin.on('keypress', (str, key) => {
+        // balance
+        if (key.name === 'b') {
+            const currentBalance = wallet.getBalance();
+            console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance[0])}\nLocked: ${humanReadable(currentBalance[1])}`)
+        }
+        // sync status
+        if (key.name === 's') {
+            const syncStatus = wallet.getSyncStatus();
+            console.log(`Wallet: ${syncStatus[0]} Local: ${syncStatus[1]} Network: ${syncStatus[2]}`);
+        } 
+        // ctrl + c saves and quits
+        if (key.ctrl && key.name === 'c') {
+            wallet.saveWalletToFile(process.env.WALLET_NAME, process.env.WALLET_PASSWORD);
+            process.exit();
+        }
+    });
+
+    // on incoming transaction
+    wallet.on('incomingtx', async function (transaction) {
+        const currentBalance = wallet.getBalance();
+        console.log(`Incoming transaction of ${humanReadable(transaction.totalAmount())} received! Optimizing...`);
+        console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance)}`)
+
+        // if balance is enough, pay out
+        if (currentBalance[0] > 50000000000) {
+            makePayment(wallet, db);
+        }
+    });
+
+    // on synced
+    wallet.on('sync', (walletHeight, networkHeight) => {
+        console.log(`Wallet synced! Wallet height: ${walletHeight}, Network height: ${networkHeight}`);
+    });
+
+    // on desynced
+    wallet.on('desync', (walletHeight, networkHeight) => {
+        console.log(`Wallet is no longer synced! Wallet height: ${walletHeight}, Network height: ${networkHeight}`);
+    });
+
+    makePayment(wallet, db);
+}
+
+// split up and make payment
+async function makePayment(wallet, db) {
+    const currentBalance = wallet.getBalance();
+    const userList = await getUserList();
+    const shareList = await getShares();
+    
+    console.log(`Making payment of ${currentBalance[0]} to Disciple Nodes...`);
+    
+};
+
+// get * from users;
+async function getUserList() {
+    const userList = await db('users')
+        .select('id', 'wallet')
+        .from('users');
+    return userList;
+}
+
+// get * from shares;
+async function getShares() {
+    const shareList = await db('shares')
+        .select('*')
+        .from('shares');
+    return shareList;
+}
+
+function humanReadable(amount) {
+    return (amount/100000000).toFixed(8);
 }

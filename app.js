@@ -39,9 +39,11 @@ async function nodeCheck() {
     const cacheHash = await getData(`https://blockapi.aeonclassic.org/block/header/${checkCacheHeight}`);
     const compareHashResults = await compareHash(nodeArray, checkHeight);
     for (let i = compareHashResults.length - 1; i >= 0; i--) {
-        if (compareHashResults[i].result !== cacheHash.hash) {
-            nodeArray.splice(i, 1);
-            insertArray.splice(i, 1);
+        if (compareHashResults !== undefined && cacheHash !== undefined) {
+            if (compareHashResults[i].result !== cacheHash.hash) {
+                nodeArray.splice(i, 1);
+                insertArray.splice(i, 1);
+            }
         }
     }
     console.log(`** passed health checks\n${nodeArray}\n** writing to db...`);
@@ -75,11 +77,17 @@ async function getPingList(userID, pingList, users) {
 }
 
 async function storeShares(pingList) {
+    const shareList = pingList.map(element => element.shares);
+    const totalShares = shareList.reduce(add);
     pingList.forEach(async function(element) {
         await db('shares')
         .where({ id: element.id })
-        .update({ shares: element.shares })
+        .update({ shares: element.shares, percent: (element.shares / totalShares * 100).toFixed(2) })
     });
+}
+
+function add(accumulator, a) {
+    return accumulator + a;
 }
 
 
