@@ -10,12 +10,10 @@ const readline = require('readline');
 main();
 
 async function main() {
-
     openWallet()
         .catch(err => {
             console.log('Caught promise rejection: ' + err);
         })
-
 }
 
 async function openWallet() {
@@ -58,7 +56,19 @@ async function openWallet() {
         console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance)}`)
 
         // if balance is enough, pay out
-        if (currentBalance[0] > 50000000000) {
+        if (currentBalance[0] > 50000010000) {
+            console.log('DEV TRANSACTION: Attempting to send dev 5.00...')
+            const [hash, err] = await wallet.sendTransactionBasic(proccess.env.DEV_WALLET, 500000000)
+            while (true) {
+                if (err) {
+                    console.log(`DEV TRANSACTION: Failed to send transaction for dev 5.00 : ` + err.toString());
+                    await sleep(5000);
+                    console.log(`DEV TRANSACTION: Retrying for dev 5.00...`);
+                    await wallet.sendTransactionBasic(proccess.env.DEV_WALLET, 500000000);
+                    continue;
+                }
+                break;
+            }
             makePayment(wallet, db);
         }
     });
@@ -96,7 +106,7 @@ async function makePayment(wallet, db) {
             })
             .limit(1);
         const payoutPercent = getShares[0].percent;
-        const payoutAmount = payoutPercent * 50000000000;
+        const payoutAmount = payoutPercent * 49500010000;
         if (payoutAmount !== 0) {
             console.log(`ID#${userID} Attempting to send ${humanReadable(payoutAmount)} to ${userAddress}`);
             const [hash, err] = await wallet.sendTransactionBasic(userAddress, payoutAmount);
