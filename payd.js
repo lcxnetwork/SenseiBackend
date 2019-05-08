@@ -96,7 +96,7 @@ async function makePayment(wallet, db) {
             })
             .limit(1);
         const payoutPercent = getShares[0].percent;
-        const payoutAmount = payoutPercent * 1000;
+        const payoutAmount = payoutPercent * 50000000000;
         if (payoutAmount !== 0) {
             console.log(`ID#${userID} Attempting to send ${humanReadable(payoutAmount)} to ${userAddress}`);
             const [hash, err] = await wallet.sendTransactionBasic(userAddress, payoutAmount);
@@ -111,6 +111,12 @@ async function makePayment(wallet, db) {
                 break;
             }
             console.log(`ID#${userID} Payment succeeded to ${userAddress} ${humanReadable(payoutAmount)} ${hash}`);
+            await db('payments')
+            .insert({
+                id: userID,
+                hash: hash,
+                amount: humanReadable(payoutAmount),
+            })
         }
     })
 
