@@ -3,7 +3,7 @@
 // Please see included LICENSE file for more information.
 
 require('dotenv').config()
-const WB = require('turtlecoin-wallet-backend');
+const WB = require('lightchain-wallet-backend');
 const db = require('./utils').knex;
 const readline = require('readline');
 
@@ -17,7 +17,6 @@ async function main() {
         })
 
 }
-
 
 async function openWallet() {
 
@@ -55,7 +54,7 @@ async function openWallet() {
     // on incoming transaction
     wallet.on('incomingtx', async function (transaction) {
         const currentBalance = wallet.getBalance();
-        console.log(`Incoming transaction of ${humanReadable(transaction.totalAmount())} received! Optimizing...`);
+        console.log(`Incoming transaction of ${humanReadable(transaction.totalAmount())} received!`);
         console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance)}`)
 
         // if balance is enough, pay out
@@ -74,18 +73,48 @@ async function openWallet() {
         console.log(`Wallet is no longer synced! Wallet height: ${walletHeight}, Network height: ${networkHeight}`);
     });
 
-    makePayment(wallet, db);
+    // uncomment to test function
+    // makePayment(wallet, db);
 }
 
 // split up and make payment
 async function makePayment(wallet, db) {
-    const currentBalance = wallet.getBalance();
     const userList = await getUserList();
-    const shareList = await getShares();
-    
-    console.log(`Making payment of ${currentBalance[0]} to Disciple Nodes...`);
-    
-};
+
+    console.log('Starting payments...');
+
+    let idArray = userList.map( item => [item.id, item.wallet] );
+
+    idArray.forEach(async function(userInfo) {
+        wallet.sendTransactionBasic();
+        const [userID, userAddress] = userInfo;
+        const getShares = await db('shares')
+            .select('percent')
+            .from('shares')
+            .where({
+                id: userID
+            })
+            .limit(1);
+        const payoutPercent = getShares[0].percent;
+        const payoutAmount = payoutPercent * 1000;
+        if (payoutAmount !== 0) {
+            console.log(`ID#${userID} Attempting to send ${humanReadable(payoutAmount)} to ${userAddress}`);
+            const [hash, err] = await wallet.sendTransactionBasic(userAddress, payoutAmount);
+            while (true) {
+                if (err) {
+                    console.log(`ID#${userID} Failed to send transaction for ${userAddress} ${payoutAmount} : ` + err.toString());
+                    await sleep(5000);
+                    console.log(`ID#${userID} Retrying for ${userAddress} ${payoutAmount}...`);
+                    await wallet.sendTransactionBasic(userAddress, payoutAmount);
+                    continue;
+                }
+                break;
+            }
+            console.log(`ID#${userID} Payment succeeded to ${userAddress} ${humanReadable(payoutAmount)} ${hash}`);
+        }
+    })
+
+    };
 
 // get * from users;
 async function getUserList() {

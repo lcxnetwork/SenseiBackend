@@ -20,10 +20,9 @@
   "dependencies": {
     "dotenv": "^7.0.0",
     "knex": "^0.16.5",
+    "lightchain-wallet-backend": "^1.0.0",
     "mysql": "^2.17.1",
     "request": "^2.88.0",
-    "request-promise": "^4.2.4",
-    "turtlecoin-rpc": "git+https://git@github.com/turtlecoin/turtlecoin-rpc-js.git",
-    "turtlecoin-wallet-backend": "git+https://git@github.com/turtlecoin/turtlecoin-wallet-backend-js.git"
+    "request-promise": "^4.2.4"
   }
 }
