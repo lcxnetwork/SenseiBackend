@@ -14,7 +14,7 @@ if (error) {
     console.log('Failed to open wallet: ' + error.toString());
 }
 console.log('Opened wallet');
-await wallet.start();
+wallet.start();
 console.log('Started wallet ' + wallet.getPrimaryAddress());
 
 // readling keypress handling
@@ -60,7 +60,11 @@ wallet.on('desync', (walletHeight, networkHeight) => {
     console.log(`Wallet is no longer synced! Wallet height: ${walletHeight}, Network height: ${networkHeight}`);
 });
 
-planPayment(wallet, db);
+setInterval(planPayment.bind(null, wallet, db), 8.64e+7);
+
+paymentDaemon(wallet, db);
+setInterval(paymentDaemon.bind(null, wallet, db), 60000);
+
 
 // plan the payment
 async function planPayment(wallet, db) {
@@ -109,7 +113,7 @@ async function paymentDaemon(wallet, db) {
             console.log(`${userID} ${userAddress} ${roundNonce} failed payment. Will retry next time payment daemon runs.`);
             console.log(err);
         } else {
-            console.log(`${userID} ${userAddress} ${roundNonce} successful payment of ${humanReadable(data.amount)}, writing to db...`)
+            console.log(`${userID} ${userAddress} ${roundNonce} successful payment of ${humanReadable(paymentAmount)}, ${hash}, writing to db...`)
             await db('payments')
             .where({ id: userID, nonce: roundNonce})
             .update({pending: false, hash: hash})
