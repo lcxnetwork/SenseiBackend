@@ -19,9 +19,9 @@ async function main() {
 async function nodeCheck() {
     console.log('** getting nodes from db...')
     const nodesFromDB = await db('nodes')
-    .select('ip', 'id')
+    .select('ip', 'id', 'connectionstring')
     .from('nodes');
-    let nodeArray = nodesFromDB.map(a => a.ip);
+    let nodeArray = nodesFromDB.map(a => a.connectionstring);
     let insertArray = nodesFromDB;
     const validateResults = await validateNodes(nodeArray);
     for (let i = validateResults.length - 1; i >= 0; i--) {

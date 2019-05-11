@@ -44,10 +44,10 @@ wallet.on('incomingtx', async function(transaction) {
     console.log(`Incoming transaction of ${humanReadable(transaction.totalAmount())} received!`);
     console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance)}`)
 
-    // if balance is enough, set up a round
+    // if balance is enough, set up a payment
     if (currentBalance[0] > 50000000000) {
         planPayment(wallet, db);
-    }
+}
 });
 
 // on synced
@@ -60,13 +60,13 @@ wallet.on('desync', (walletHeight, networkHeight) => {
     console.log(`Wallet is no longer synced! Wallet height: ${walletHeight}, Network height: ${networkHeight}`);
 });
 
-planPayment(wallet, db);
+// uncomment to test
+//planPayment(wallet, db);
 
-setInterval(planPayment.bind(null, wallet, db), 8.64e+7);
+// uncomment to test
+// paymentDaemon(wallet, db);
 
-paymentDaemon(wallet, db);
 setInterval(paymentDaemon.bind(null, wallet, db), 60000);
-
 
 // plan the payment
 async function planPayment(wallet, db) {
@@ -100,11 +100,17 @@ async function planPayment(wallet, db) {
     console.log('Wrote payment round to database.');
 };
 
+// make any due payments
 async function paymentDaemon(wallet, db) {
+    console.log('** firing up payment engine...')
     const paymentQuery = await db('payments')
     .select('*')
     .from('payments')
     .where({pending: true});
+    if (!paymentQuery.length) {
+        console.log('** no payments pending. stopping payment engine');
+        return;
+    }
     const paymentRound = paymentQuery.map(item => [item.id, item.nonce, item.address, item.amount])
     paymentRound.forEach(async function(data) {
         const [userID, roundNonce, userAddress, paymentAmount] = data;
