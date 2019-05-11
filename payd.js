@@ -70,7 +70,6 @@ setInterval(paymentDaemon.bind(null, wallet, db), 60000);
 
 // plan the payment
 async function planPayment(wallet, db) {
-
     console.log('Gathering information on payments...');
     const roundNonce = Date.now();
     const userList = await getUserList();
@@ -86,9 +85,8 @@ async function planPayment(wallet, db) {
             })
             .limit(1);
         const payoutPercent = getShares[0].percent / 1000000;
-        // const payoutAmount = payoutPercent * 47000000000;
         const payoutAmount = payoutPercent * 1000;
-        if (payoutAmount !== 0) {
+        if (payoutAmount !== 0) {   
         await db('payments')
             .insert([{
                 id: userID, 

@@ -81,9 +81,13 @@ async function storeShares(pingList) {
     const shareList = pingList.map(element => element.shares);
     const totalShares = shareList.reduce(add);
     pingList.forEach(async function(element) {
+        let percent = (element.shares / totalShares * 1000000);
+        if (isNaN(percent)) {
+            percent = 0;
+        }
         await db('shares')
         .where({ id: element.id })
-        .update({ shares: element.shares, percent: (element.shares / totalShares * 1000000).toFixed(5) })
+        .update({ shares: element.shares, percent: percent })
     });
 }
 
