@@ -65,11 +65,9 @@ async function checkShares() {
 
 async function getPingList(userID, pingList, users) {
     // SELECT * FROM pings WHERE timestamp >= current_timestamp() - INTERVAL 1 DAY;
-    const pingRequest = await db('pings')
-    .select('*')
-    .from('pings')
-    .where({ id: userID}, 'timestamp', '>=', 'current_timestamp() - INTERVAL 1 DAY')
-    let insertData = { id: userID, shares: pingRequest.length }
+    const pingRequest = 
+        await db.raw(`SELECT * FROM pings WHERE timestamp >= current_timestamp() - INTERVAL 1 DAY AND id = ${userID};`)
+    let insertData = { id: userID, shares: pingRequest[0].length }
     pingList.push(insertData);
     if (pingList.length === users.length) {
         storeShares(pingList);
