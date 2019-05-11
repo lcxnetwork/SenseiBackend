@@ -44,8 +44,8 @@ wallet.on('incomingtx', async function(transaction) {
     console.log(`Incoming transaction of ${humanReadable(transaction.totalAmount())} received!`);
     console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance)}`)
 
-    // if balance is enough, set up a payment
-    if (currentBalance[0] > 50000000000) {
+    // if unlocked balance is enough, set up a payment
+    if (currentBalance[0] > 5010000000) {
         planPayment(wallet, db);
 }
 });
@@ -85,7 +85,7 @@ async function planPayment(wallet, db) {
             })
             .limit(1);
         const payoutPercent = getShares[0].percent / 1000000;
-        const payoutAmount = payoutPercent * 1000;
+        const payoutAmount = payoutPercent * 5000000000;
         if (payoutAmount !== 0) {   
         await db('payments')
             .insert([{
