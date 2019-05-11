@@ -60,6 +60,8 @@ wallet.on('desync', (walletHeight, networkHeight) => {
     console.log(`Wallet is no longer synced! Wallet height: ${walletHeight}, Network height: ${networkHeight}`);
 });
 
+planPayment(wallet, db);
+
 setInterval(planPayment.bind(null, wallet, db), 8.64e+7);
 
 paymentDaemon(wallet, db);
@@ -83,7 +85,7 @@ async function planPayment(wallet, db) {
                 id: userID
             })
             .limit(1);
-        const payoutPercent = getShares[0].percent / 100;
+        const payoutPercent = getShares[0].percent / 1000000;
         // const payoutAmount = payoutPercent * 47000000000;
         const payoutAmount = payoutPercent * 1000;
         if (payoutAmount !== 0) {

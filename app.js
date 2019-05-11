@@ -8,9 +8,10 @@ const request = require('request-promise');
 
 main();
 
-function main() {
+async function main() {
     nodeCheck();
     setInterval(nodeCheck, 600000);
+    await sleep(5000);
     checkShares();
     setInterval(checkShares, 600000);
 }
@@ -82,7 +83,7 @@ async function storeShares(pingList) {
     pingList.forEach(async function(element) {
         await db('shares')
         .where({ id: element.id })
-        .update({ shares: element.shares, percent: (element.shares / totalShares * 100).toFixed(2) })
+        .update({ shares: element.shares, percent: (element.shares / totalShares * 1000000).toFixed(5) })
     });
 }
 
@@ -162,3 +163,7 @@ function asyncGetData(apiURL) {
 function getRandomNumber(max) {
     return Math.floor(Math.random() * (max + 1));
   }
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
