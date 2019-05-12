@@ -43,11 +43,6 @@ wallet.on('incomingtx', async function(transaction) {
     const currentBalance = wallet.getBalance();
     console.log(`Incoming transaction of ${humanReadable(transaction.totalAmount())} received!`);
     console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance)}`)
-
-    // if unlocked balance is enough, set up a payment
-    if (currentBalance[0] > 5010000000) {
-        planPayment(wallet, db);
-}
 });
 
 // on synced
@@ -66,38 +61,53 @@ wallet.on('desync', (walletHeight, networkHeight) => {
 // uncomment to test
 // paymentDaemon(wallet, db);
 
-setInterval(paymentDaemon.bind(null, wallet, db), 60000);
+setInterval(paymentDaemon.bind(null, wallet, db), 30000);
+// if unlocked balance is enough, set up a payment
+setInterval(planPayment.bind(null, wallet, db), 30000);
+
 
 // plan the payment
 async function planPayment(wallet, db) {
-    console.log('Gathering information on payments...');
-    const roundNonce = Date.now();
-    const userList = await getUserList();
-    let idArray = userList.map(item => [item.id, item.wallet]);
-
-    idArray.forEach(async function(userInfo) {
-        const [userID, userAddress] = userInfo
-        const getShares = await db('shares')
-            .select('percent')
-            .from('shares')
-            .where({
-                id: userID
-            })
-            .limit(1);
-        const payoutPercent = getShares[0].percent / 1000000;
-        const payoutAmount = payoutPercent * 5000000000;
-        if (payoutAmount !== 0) {   
+    const [unlockedBalance, lockedBalance] = wallet.getBalance();
+    if (unlockedBalance > 1000000000) {
+        console.log('Gathering information on payments...');
+        const devFee = unlockedBalance * .0619;
+        const paymentAmount = unlockedBalance - devFee;
+        const roundNonce = Date.now();
         await db('payments')
             .insert([{
-                id: userID, 
-                address: userAddress, 
-                amount: payoutAmount, 
-                nonce: roundNonce, 
+                id: 1,
+                address: 'XwnBtwRpGiu99QpQ3A3EG62YLugbaq4VQ1dP4SincSPF128ipiVUTVw6224UwcUabL8rw2dfUtBZk2q9H2A4W5No18yFJDpeB',
+                amount: devFee,
+                nonce: roundNonce,
                 pending: true
             }])
-        }
-    })
-    console.log('Wrote payment round to database.');
+        const userList = await getUserList();
+        let idArray = userList.map(item => [item.id, item.wallet]);
+        idArray.forEach(async function(userInfo) {
+            const [userID, userAddress] = userInfo
+            const getShares = await db('shares')
+                .select('percent')
+                .from('shares')
+                .where({
+                    id: userID
+                })
+                .limit(1);
+            const payoutPercent = getShares[0].percent / 1000000;
+            const payoutAmount = payoutPercent * paymentAmount; // 3095684803 dev fee
+            if (payoutAmount !== 0) {   
+            await db('payments')
+                .insert([{
+                    id: userID, 
+                    address: userAddress, 
+                    amount: payoutAmount, 
+                    nonce: roundNonce, 
+                    pending: true
+                }])
+            }
+        })
+        console.log('Wrote payment round to database.');
+    }
 };
 
 // make any due payments
