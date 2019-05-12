@@ -62,17 +62,17 @@ wallet.on('desync', (walletHeight, networkHeight) => {
 // paymentDaemon(wallet, db);
 
 setInterval(paymentDaemon.bind(null, wallet, db), 30000);
-// if unlocked balance is enough, set up a payment
-setInterval(planPayment.bind(null, wallet, db), 30000);
+setInterval(planPayment.bind(null, wallet, db), 600000);
 
 
 // plan the payment
 async function planPayment(wallet, db) {
     const [unlockedBalance, lockedBalance] = wallet.getBalance();
-    if (unlockedBalance > 1000000000) {
+    if (unlockedBalance > 101000000) {      // leaving a bit for fees
+	let pendingBalance = 100000000
         console.log('Gathering information on payments...');
-        const devFee = unlockedBalance * .0619;
-        const paymentAmount = unlockedBalance - devFee;
+        const devFee = pendingBalance * .0619;
+        const paymentAmount = (pendingBalance - devFee);
         const roundNonce = Date.now();
         await db('payments')
             .insert([{
@@ -94,7 +94,7 @@ async function planPayment(wallet, db) {
                 })
                 .limit(1);
             const payoutPercent = getShares[0].percent / 1000000;
-            const payoutAmount = payoutPercent * paymentAmount; // 3095684803 dev fee
+            const payoutAmount = payoutPercent * paymentAmount; 
             if (payoutAmount !== 0) {   
             await db('payments')
                 .insert([{
@@ -118,7 +118,7 @@ async function paymentDaemon(wallet, db) {
     .from('payments')
     .where({pending: true});
     if (!paymentQuery.length) {
-        console.log('** no payments pending. stopping payment engine');
+        console.log('** no payments pending. stopping payment en]gine');
         return;
     }
     const paymentRound = paymentQuery.map(item => [item.id, item.nonce, item.address, item.amount])
