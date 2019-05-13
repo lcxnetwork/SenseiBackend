@@ -41,8 +41,13 @@ process.stdin.on('keypress', (str, key) => {
 // on incoming transaction
 wallet.on('incomingtx', async function(transaction) {
     const currentBalance = wallet.getBalance();
-    console.log(`Incoming transaction of ${humanReadable(transaction.totalAmount())} received!`);
-    console.log(`Current balance:\nUnlocked: ${humanReadable(currentBalance)}`)
+    console.log(`Incoming transaction of ${transaction.totalAmount()} received!`);
+        await db('wallet') 
+        .insert([{
+            timestamp: Date.now(),
+            nonce: getRoundNonce(Date.now()),
+            amount: transaction.totalAmount()
+        }]) 
 });
 
 // on synced
@@ -56,32 +61,55 @@ wallet.on('desync', (walletHeight, networkHeight) => {
 });
 
 // uncomment to test
-//planPayment(wallet, db);
-
-// uncomment to test
-// paymentDaemon(wallet, db);
 
 setInterval(paymentDaemon.bind(null, wallet, db), 30000);
-setInterval(planPayment.bind(null, wallet, db), 600000);
+queryRound(wallet, db);
 
+function queryRound(wallet, db) {
+    let currentRound = getRoundNonce(Date.now());
+    console.log('Current round nonce = ' + currentRound);
+    setInterval(function() {
+        let checkRound = getRoundNonce(Date.now());
+        if (checkRound  !== currentRound) {
+            planPayment(wallet, db, currentRound);
+            console.log(`Detected new round ${checkRound}`);
+            currentRound = checkRound;
+        }
+    }, 5000);
+};
 
 // plan the payment
-async function planPayment(wallet, db) {
+async function planPayment(wallet, db, roundNonce) {
+    const checkUnique = await db('payments')
+        .select('*')
+        .from('payments')
+        .where({
+            nonce: roundNonce
+        })
+    const walletInfo = await db('wallet')
+        .select('*')
+        .from('wallet')
+        .where({
+            nonce: roundNonce
+        })
+        .map(a => a.amount);
+    const pendingBalance = walletInfo.reduce(add, 0)
     const [unlockedBalance, lockedBalance] = wallet.getBalance();
-    if (unlockedBalance > 101000000) {      // leaving a bit for fees
-	let pendingBalance = 100000000
+    if (!checkUnique.length) {
         console.log('Gathering information on payments...');
         const devFee = pendingBalance * .0619;
         const paymentAmount = (pendingBalance - devFee);
-        const roundNonce = Date.now();
-        await db('payments')
+        if (devFee) {
+            await db('payments')  // sending the dev fee
             .insert([{
-                id: 1,
+                id: 3,
                 address: 'XwnBtwRpGiu99QpQ3A3EG62YLugbaq4VQ1dP4SincSPF128ipiVUTVw6224UwcUabL8rw2dfUtBZk2q9H2A4W5No18yFJDpeB',
                 amount: devFee,
                 nonce: roundNonce,
-                pending: true
+                pending: true,
+                devfee: true
             }])
+        }
         const userList = await getUserList();
         let idArray = userList.map(item => [item.id, item.wallet]);
         idArray.forEach(async function(userInfo) {
@@ -95,14 +123,16 @@ async function planPayment(wallet, db) {
                 .limit(1);
             const payoutPercent = getShares[0].percent / 1000000;
             const payoutAmount = payoutPercent * paymentAmount; 
-            if (payoutAmount !== 0) {   
+            if (payoutAmount) {   
             await db('payments')
                 .insert([{
                     id: userID, 
                     address: userAddress, 
                     amount: payoutAmount, 
                     nonce: roundNonce, 
-                    pending: true
+                    pending: true,
+                    devfee: false,
+                    percent: getShares[0].percent
                 }])
             }
         })
@@ -146,6 +176,23 @@ async function getUserList() {
     return userList;
 }
 
+// convert unix timestamp into hourly round nonce
+function getRoundNonce(timestamp) {
+  let d = new Date(parseInt(timestamp)) // Convert the passed timestamp to milliseconds
+  let yyyy = d.getFullYear()
+  let mm = ('0' + (d.getMonth() + 1)).slice(-2) // Months are zero based. Add leading 0.
+  let dd = ('0' + d.getDate()).slice(-2) // Add leading 0.
+  let hh = ('0' + d.getHours()).slice(-2) // Add leading 0
+  let roundNonce;
+  // ie: 2013032416
+  roundNonce = yyyy + mm + dd + hh;
+  return roundNonce;
+};
+
 function humanReadable(amount) {
     return (amount / 100000000).toFixed(8);
+}
+
+function add(accumulator, a) {
+    return accumulator + a;
 }

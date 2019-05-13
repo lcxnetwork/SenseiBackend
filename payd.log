@@ -1,0 +1,9 @@
+
+> senseinodebackend@0.0.1 payd /home/ender/SenseiBackend
+> node payd.js
+
+Opened wallet
+Started wallet XwoMCTrgStgbwpVres1cL6KxxkyB2odA25Fa8tUxJjhh7418ziooJArWaLUUCSaCCYQpvYPaDinzYANgmAWhWV1Q21Gy7zcgZ
+Gathering information on payments...
+Wrote payment round to database.
+Wallet synced! Wallet height: 112137, Network height: 112137
