@@ -150,7 +150,7 @@ async function paymentDaemon(wallet, db) {
     .from('payments')
     .where({pending: true});
     if (!paymentQuery.length) {
-        console.log('** no payments pending. stopping payment en]gine');
+        console.log('** no payments pending. stopping payment engine');
         return;
     }
     const paymentRound = paymentQuery.map(item => [item.id, item.nonce, item.address, item.amount])
