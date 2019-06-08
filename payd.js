@@ -17,6 +17,8 @@ console.log('Opened wallet');
 wallet.start();
 console.log('Started wallet ' + wallet.getPrimaryAddress());
 
+wallet.scanCoinbaseTransactions(true);
+
 // readling keypress handling
 readline.emitKeypressEvents(process.stdin);
 process.stdin.setRawMode(true);

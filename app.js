@@ -29,7 +29,7 @@ async function nodeCheck() {
         .select('validationkey')
         .from('users')
         .where({id: nodesFromDB[i].id})
-        if (validateResults[i] === undefined || validateResults[i].synced !== true || validateResults[i].validate !== validationKey[0].validationkey ) {
+        if (validateResults[i] === undefined || validateResults[i].synced !== true || validateResults[i].validate !== validationKey[0].validationkey || validateResults[i].version !== '0.2.2') {
             nodeArray.splice(i, 1);
             insertArray.splice(i, 1);
         }
@@ -45,11 +45,15 @@ async function nodeCheck() {
                 nodeArray.splice(i, 1);
                 insertArray.splice(i, 1);
             }
+        } else {
+            nodeArray.splice(i, 1);
+            insertArray.splice(i, 1);
         }
     }
     console.log(`** passed health checks\n${nodeArray}\n** writing to db...`);
     await db('pings')
         .insert(insertArray);
+        // console.log(insertArray);
 }
 
 async function checkShares() {
