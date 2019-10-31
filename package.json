@@ -19,7 +19,7 @@
   "homepage": "https://github.com/lcxnetwork/SenseiNodeBackend#readme",
   "dependencies": {
     "dotenv": "^7.0.0",
-    "knex": "^0.16.5",
+    "knex": "^0.19.5",
     "lightchain-wallet-backend": "^1.0.0",
     "mysql": "^2.17.1",
     "request": "^2.88.0",
